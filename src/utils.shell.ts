@@ -4,7 +4,7 @@ import { exec } from 'shelljs';
  * Retrieves a list of installed npm packages.
  * @returns {string[]} An array of installed package names.
  */
-export function getInstalledPackages() {
+function getInstalledPackages() {
   const shellResults = exec(`npm ls --parseable`, { silent: true });
 
   if (shellResults.code !== 0) {
@@ -42,14 +42,14 @@ function getAddedPackagesFromGitDiff(branch1: string, branch2: string) {
 }
 
 /**
- * Compares the package changes between two Git branches and returns the unmodified (original) and added packages.
+ * Retrieves the package changes between two Git branches, returning the unmodified (original) and added packages.
  * @param {string} branch1 - The first branch to compare.
  * @param {string} branch2 - The second branch to compare.
  * @returns {Object} An object containing the original and added packages as arrays.
  * @property {string[]} originPackages - An array of unmodified (original) package names.
  * @property {string[]} addedPackages - An array of added package names.
  */
-export function comparePackagesBetweenGitBranches(
+export function getPackageChangesBetweenBranches(
   branch1: string,
   branch2: string,
 ) {
