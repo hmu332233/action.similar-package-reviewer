@@ -1,3 +1,8 @@
+/**
+ * Formats an array of `PackageSimilarityResult` into a user-friendly string.
+ * @param similarityResults - An array of `PackageSimilarityResult` to format.
+ * @returns A formatted string containing the similarity results.
+ */
 export function formatPackageSimilarity(
   similarityResults: PackageSimilarityResult[],
 ) {
