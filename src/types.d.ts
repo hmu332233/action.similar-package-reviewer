@@ -9,3 +9,8 @@ type PackageSimilarityResult = {
   pkgName2: string;
   description: string;
 };
+
+type Inputs = {
+  originBranch: string;
+  targetBranch: string;
+};
