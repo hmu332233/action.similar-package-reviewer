@@ -2,12 +2,13 @@
   "name": "action.compare-dependencies",
   "version": "1.0.0",
   "description": "A GitHub Action for Node.js projects that automatically detects similar dependencies in pull requests, streamlining dependency management and preventing redundancy.",
-  "main": "index.js",
+  "main": "lib/main.js",
   "scripts": {
     "prepare": "husky install",
-    "build": "tsc -b",
-    "start": "node lib index.js",
-    "dev": "pnpm build; pnpm start"
+    "build": "tsc -b && ncc build",
+    "build:dev": "tsc -b",
+    "start:dev": "node lib index.js",
+    "dev": "pnpm build:dev; pnpm start:dev"
   },
   "keywords": [],
   "author": "",
@@ -20,8 +21,9 @@
     "shelljs": "^0.8.5"
   },
   "devDependencies": {
-    "@types/shelljs": "^0.8.11",
     "@types/node": "^18.15.0",
+    "@types/shelljs": "^0.8.11",
+    "@vercel/ncc": "^0.36.1",
     "husky": "^8.0.0",
     "lint-staged": "^13.2.0",
     "prettier": "^2.8.4",
