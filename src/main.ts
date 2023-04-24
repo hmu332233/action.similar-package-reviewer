@@ -8,7 +8,8 @@ import * as packageDiffHelper from './packageDiffHelper';
 import * as textFormatHelper from './textFormatHelper';
 
 async function run(): Promise<void> {
-  const { originBranch, targetBranch } = inputHelper.getInputs();
+  const { openaiKey, originBranch, targetBranch } = inputHelper.getInputs();
+
   const { originPackages, addedPackages } =
     packageDiffHelper.getPackageChangesBetweenBranches(
       originBranch,
@@ -21,6 +22,7 @@ async function run(): Promise<void> {
 
   const packageSimilarityResults =
     await openaiHelper.comparePackagesUsingOpenAI(
+      openaiKey,
       originPackages,
       addedPackages,
     );

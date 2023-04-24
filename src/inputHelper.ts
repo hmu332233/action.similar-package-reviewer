@@ -8,6 +8,7 @@ import * as github from '@actions/github';
  */
 export function getInputs() {
   const inputs: Inputs = {
+    openaiKey: core.getInput('openai_key') || process.env.OPENAI_API_KEY!,
     originBranch: core.getInput('origin_branch') || 'origin/main',
     targetBranch:
       core.getInput('target_branch') ||

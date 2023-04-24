@@ -1,11 +1,5 @@
 import { Configuration, OpenAIApi } from 'openai';
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const openai = new OpenAIApi(configuration);
-
 /**
  * Creates a prompt for OpenAI API to compare packages from two lists and identify any with similar purposes.
  * @param {string[]} pkgNames1 - The first list of package names.
@@ -25,14 +19,21 @@ B List: ${pkgNames2.join(',')}`;
 
 /**
  * Compares packages from two lists using OpenAI API, and returns the similarities between them.
+ * @param {string} openaiKey - openai key.
  * @param {string[]} originPackages - The first list of package names.
  * @param {string[]} addedPackages - The second list of package names.
  * @returns {Promise<PackageSimilarityResult[]>} A promise that resolves to an array of package similarity results.
  */
 export async function comparePackagesUsingOpenAI(
+  openaiKey: string,
   originPackages: string[],
   addedPackages: string[],
 ): Promise<PackageSimilarityResult[]> {
+  const configuration = new Configuration({
+    apiKey: openaiKey,
+  });
+  const openai = new OpenAIApi(configuration);
+
   const content = createPrompt(originPackages, addedPackages);
 
   const completion = await openai.createChatCompletion({

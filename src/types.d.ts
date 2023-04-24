@@ -11,6 +11,7 @@ type PackageSimilarityResult = {
 };
 
 type Inputs = {
+  openaiKey: string;
   originBranch: string;
   targetBranch: string;
 };
