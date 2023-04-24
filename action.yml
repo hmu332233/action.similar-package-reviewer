@@ -26,7 +26,7 @@ inputs:
 #         body: |
 #           ${{ steps.compare.outputs.RESULTS }}
 runs:
-  using: 'node16'
+  using: 'composite'
   steps:
     # - uses: actions/checkout@v3
     #   with:
