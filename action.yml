@@ -14,5 +14,5 @@ outputs:
     description: 'A summary of any similar packages detected during the comparison, intended to be posted as a comment on the pull request for review and consideration.'
 
 runs:
-  using: 'node18'
+  using: 'node16'
   main: 'dist/index.js'
