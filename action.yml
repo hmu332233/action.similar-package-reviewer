@@ -9,35 +9,10 @@ inputs:
   target_branch:
     description: 'The branch associated with the pull request, which contains the changes to be compared against the origin branch. Can be customized if needed.'
 
-# runs:
-#   using: 'composite'
-#   steps:
-#     - uses: actions/checkout@v3
-#       with:
-#         fetch-depth: 0
-#     - name: Compare
-#       id: compare
-#       shell: bash
-#       run: node dist/index.js
-#     - name: Create comment
-#       uses: peter-evans/create-or-update-comment@v3
-#       with:
-#         issue-number: ${{ github.event.pull_request.number }}
-#         body: |
-#           ${{ steps.compare.outputs.RESULTS }}
+outputs:
+  results:
+    description: 'A summary of any similar packages detected during the comparison, intended to be posted as a comment on the pull request for review and consideration.'
+
 runs:
-  using: 'composite'
-  steps:
-    # - uses: actions/checkout@v3
-    #   with:
-    #     fetch-depth: 0
-    - name: Compare
-      id: compare
-      shell: bash
-      run: node dist/index.js
-    - name: Create comment
-      uses: peter-evans/create-or-update-comment@v3
-      with:
-        issue-number: ${{ github.event.pull_request.number }}
-        body: |
-          ${{ steps.compare.outputs.RESULTS }}
+  using: 'node18'
+  main: 'dist/index.js'
