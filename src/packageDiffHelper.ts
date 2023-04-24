@@ -5,7 +5,7 @@ import { exec } from 'shelljs';
  * @returns {string[]} An array of installed package names.
  */
 function getInstalledPackages() {
-  const shellResults = exec(`npm ls --parseable`, { silent: true });
+  const shellResults = exec(`npm i; npm ls --parseable`, { silent: true });
 
   if (shellResults.code !== 0) {
     console.log(shellResults.stderr);

@@ -7,7 +7,7 @@
     "prepare": "husky install",
     "build": "tsc -b && ncc build",
     "build:dev": "tsc -b",
-    "start:dev": "node lib index.js",
+    "start:dev": "node lib/main.js",
     "dev": "pnpm build:dev; pnpm start:dev"
   },
   "keywords": [],
