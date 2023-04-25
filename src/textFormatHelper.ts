@@ -21,7 +21,7 @@ export function formatPackageSimilarity(
 }
 
 function wrapContentWithHeaderAndFooter(content: string) {
-  return `${HEADER_TEXT}${content}\n\n${COMMENT_MARKER}`;
+  return `${HEADER_TEXT}\n\n${content}\n\n${COMMENT_MARKER}`;
 }
 
 function createTableHeader(): string {
