@@ -1,3 +1,5 @@
+const HEADER_TEXT =
+  '**Here are the package comparison results! 📦🔍😃 Check it out!**';
 const COMMENT_MARKER = '<!-- compare-dependencies-comment-marker -->';
 
 /**
@@ -8,14 +10,18 @@ const COMMENT_MARKER = '<!-- compare-dependencies-comment-marker -->';
 export function formatPackageSimilarity(
   similarityResults: PackageSimilarityResult[],
 ) {
-  if (!similarityResults || similarityResults.length === 0) {
-    return 'No similar packages found.';
+  if (!similarityResults?.length) {
+    return wrapContentWithHeaderAndFooter('No similar packages found.');
   }
 
   const tableRows = similarityResults.map(createTableRow).join('');
   const markdownTable = createTableHeader() + tableRows;
 
-  return `${markdownTable}\n\n${COMMENT_MARKER}`;
+  return wrapContentWithHeaderAndFooter(markdownTable);
+}
+
+function wrapContentWithHeaderAndFooter(content: string) {
+  return `${HEADER_TEXT}${content}\n\n${COMMENT_MARKER}`;
 }
 
 function createTableHeader(): string {
