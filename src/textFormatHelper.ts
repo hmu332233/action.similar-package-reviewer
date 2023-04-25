@@ -12,12 +12,16 @@ export function formatPackageSimilarity(
     return 'No similar packages found.';
   }
 
-  const formattedResults = similarityResults.map(
-    ({ pkgName1, pkgName2, description }) =>
-      `- ${pkgName1} and ${pkgName2}: ${description}`,
-  );
+  const tableRows = similarityResults.map(createTableRow).join('');
+  const markdownTable = createTableHeader() + tableRows;
 
-  return `Similar packages:\n\n${formattedResults.join(
-    '\n',
-  )}\n\n${COMMENT_MARKER}`;
+  return `${markdownTable}\n\n${COMMENT_MARKER}`;
+}
+
+function createTableHeader(): string {
+  return '| pkgName1 | pkgName2 | description |\n| --- | --- | --- |\n';
+}
+
+function createTableRow(row: PackageSimilarityResult): string {
+  return `| ${row.pkgName1} | ${row.pkgName2} | ${row.description} |\n`;
 }
