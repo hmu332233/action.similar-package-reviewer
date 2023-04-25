@@ -7,6 +7,7 @@ import * as outputHelper from './outputHelper';
 import * as openaiHelper from './openaiHelper';
 import * as packageDiffHelper from './packageDiffHelper';
 import * as textFormatHelper from './textFormatHelper';
+import * as summaryHelper from './summaryHelper';
 
 async function run(): Promise<void> {
   const { openaiKey, originBranch, targetBranch } = inputHelper.getInputs();
@@ -39,7 +40,12 @@ async function run(): Promise<void> {
   core.debug(`message: ${formattedResults}`);
   core.endGroup();
 
-  return outputHelper.setResults(formattedResults);
+  core.startGroup('Set Results');
+  outputHelper.setResults(formattedResults);
+  await summaryHelper.writeSummary(formattedResults);
+  core.endGroup();
+
+  return;
 }
 
 run();
