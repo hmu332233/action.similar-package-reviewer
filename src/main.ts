@@ -1,3 +1,4 @@
+import * as core from '@actions/core';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -10,25 +11,33 @@ import * as textFormatHelper from './textFormatHelper';
 async function run(): Promise<void> {
   const { openaiKey, originBranch, targetBranch } = inputHelper.getInputs();
 
+  core.startGroup('Get Package List');
   const { originPackages, addedPackages } =
     packageDiffHelper.getPackageChangesBetweenBranches(
       originBranch,
       targetBranch,
     );
+  core.endGroup();
 
   if (addedPackages.length === 0) {
     return outputHelper.setNotFound();
   }
 
+  core.startGroup('Compare Packages Using OpenAI');
   const packageSimilarityResults =
     await openaiHelper.comparePackagesUsingOpenAI(
       openaiKey,
       originPackages,
       addedPackages,
     );
+  core.endGroup();
+
+  core.startGroup('Format Messages');
   const formattedResults = textFormatHelper.formatPackageSimilarity(
     packageSimilarityResults,
   );
+  core.debug(`message: ${formattedResults}`);
+  core.endGroup();
 
   return outputHelper.setResults(formattedResults);
 }

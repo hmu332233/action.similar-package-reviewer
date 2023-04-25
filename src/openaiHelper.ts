@@ -1,3 +1,4 @@
+import * as core from '@actions/core';
 import { Configuration, OpenAIApi } from 'openai';
 
 /**
@@ -35,6 +36,7 @@ export async function comparePackagesUsingOpenAI(
   const openai = new OpenAIApi(configuration);
 
   const content = createPrompt(originPackages, addedPackages);
+  core.debug(`prompt: ${content}`);
 
   const completion = await openai.createChatCompletion({
     model: 'gpt-3.5-turbo',
@@ -44,5 +46,7 @@ export async function comparePackagesUsingOpenAI(
   const comparedPkgs = JSON.parse(
     completion.data.choices[0].message?.content || '[]',
   );
+  core.debug(`comparedPkgs: ${JSON.stringify(comparedPkgs)}`);
+
   return comparedPkgs;
 }

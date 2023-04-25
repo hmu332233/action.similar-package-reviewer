@@ -1,3 +1,4 @@
+import * as core from '@actions/core';
 import { exec } from 'shelljs';
 
 /**
@@ -59,6 +60,9 @@ export function getPackageChangesBetweenBranches(
   const originPackages = installedPackages.filter(
     (v) => !addedPackages.includes(v),
   );
+
+  core.debug(`originPackages: ${originPackages.join(',')}`);
+  core.debug(`addedPackages: ${addedPackages.join(',')}`);
 
   return { originPackages, addedPackages };
 }
