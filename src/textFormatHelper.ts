@@ -1,3 +1,5 @@
+const COMMENT_MARKER = '<!-- compare-dependencies-comment-marker -->';
+
 /**
  * Formats an array of `PackageSimilarityResult` into a user-friendly string.
  * @param similarityResults - An array of `PackageSimilarityResult` to format.
@@ -15,5 +17,7 @@ export function formatPackageSimilarity(
       `- ${pkgName1} and ${pkgName2}: ${description}`,
   );
 
-  return `Similar packages:\n\n${formattedResults.join('\n')}`;
+  return `Similar packages:\n\n${formattedResults.join(
+    '\n',
+  )}\n\n${COMMENT_MARKER}`;
 }
