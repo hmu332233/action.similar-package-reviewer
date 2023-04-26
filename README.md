@@ -13,7 +13,7 @@ This action examines your pull requests for newly added dependencies and compare
 
 ## Prerequisites
 
-Before using action.compare-dependencies, you need to have an OpenAI API key.
+Before using action.compare-dependencies, you need to have an OpenAI API key. If you don't have an API key yet, you can get one by signing up on the [OpenAI website](https://platform.openai.com/account/api-keys).
 
 ## Usage
 
