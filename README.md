@@ -41,7 +41,7 @@ jobs:
           openai_key: ${{ secrets.OPENAI_API_KEY }}
 ```
 
-만약 너가 원한다면, PR Comment로 받아볼 수도 있어
+If you want, you can get a PR comment through output
 
 ```yaml
 name: 'Check Dependencies And Create Comment'
