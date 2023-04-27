@@ -4,7 +4,7 @@ import { Configuration, OpenAIApi } from 'openai';
 const SYSTEM_PROMPT = `Please compare the packages in lists A and B, and identify any with same purposes.
 If a similar package is found, please present the information in the following JSON format:
 [ { "pkgName1": "[package from A list]", "pkgName2": "[package from B list]", "description": "[brief explanation of the similarity]" }]
-If no similar packages are found, output "[]". Please ensure only the JSON format is provided in the response.`;
+If no similar packages are found, output []. Please ensure only the JSON format is provided in the response.`;
 
 /**
  * Creates a prompt for OpenAI API to compare packages from two lists and identify any with similar purposes.
@@ -13,9 +13,7 @@ If no similar packages are found, output "[]". Please ensure only the JSON forma
  * @returns {string} A formatted prompt to be used with OpenAI API.
  */
 function createPrompt(pkgNames1: string[], pkgNames2: string[]) {
-  return `
-A List: ${pkgNames1.join(', ')}
-B List: ${pkgNames2.join(', ')}`;
+  return `A List: ${pkgNames1.join(', ')}\nB List: ${pkgNames2.join(', ')}`;
 }
 
 /**
@@ -46,10 +44,21 @@ export async function comparePackagesUsingOpenAI(
     ],
   });
 
-  const comparedPkgs = JSON.parse(
-    completion.data.choices[0].message?.content || '[]',
+  const messageContent = completion.data.choices[0].message?.content || '[]';
+  const comparedPkgs = safelyParseJSON<PackageSimilarityResult[]>(
+    messageContent,
+    [],
   );
   core.debug(`comparedPkgs: ${JSON.stringify(comparedPkgs)}`);
 
   return comparedPkgs;
+}
+
+function safelyParseJSON<T>(json: string, defaultValue: T): T {
+  try {
+    return JSON.parse(json);
+  } catch (error) {
+    core.error(`safelyParseJSON: parsing error: ${error}`);
+    return defaultValue;
+  }
 }
