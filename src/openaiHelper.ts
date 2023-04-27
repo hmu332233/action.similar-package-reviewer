@@ -13,9 +13,9 @@ If a similar package is found, please present the information in the following J
 [ { "pkgName1": "[package from A list]", "pkgName2": "[package from B list]", "description": "[brief explanation of the similarity]" }]
 If no similar packages are found, output "[]". Please ensure only the JSON format is provided in the response.
   
-Here are the package lists:
-A List: ${pkgNames1.join(',')}
-B List: ${pkgNames2.join(',')}`;
+Example lists:
+A List: ["${pkgNames1.join('","')}"]
+B List: ["${pkgNames2.join('","')}"]`;
 }
 
 /**
