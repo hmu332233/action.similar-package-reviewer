@@ -25,7 +25,7 @@ function wrapContentWithHeaderAndFooter(content: string) {
 }
 
 function createTableHeader(): string {
-  return '| pkgName1 | pkgName2 | description |\n| --- | --- | --- |\n';
+  return '| Existing Package | New Package | description |\n| --- | --- | --- |\n';
 }
 
 function createTableRow(row: PackageSimilarityResult): string {
