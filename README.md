@@ -1,6 +1,8 @@
 # action.compare-dependencies
 
-This action examines your pull requests for newly added dependencies and compares them with previously installed packages. If any similar packages are detected, a summary is generated and presented as a GitHub Action job summary, helping you streamline dependency management and prevent redundancy.
+A GitHub Action that provides a summary of similar packages detected by analyzing pull requests for new dependencies, effectively streamlining dependency management and preventing redundancy in Node.js projects, powered by ChatGPT
+
+![summary](https://user-images.githubusercontent.com/10302969/235314378-35cf7ba3-89b4-4279-8b0c-959ac46ecfc4.png)
 
 ## How it works
 
@@ -9,8 +11,6 @@ This action examines your pull requests for newly added dependencies and compare
 3. A summary is generated to identify any similar packages detected during the comparison.
 4. The summary is presented as a GitHub Action job summary.
 5. The action output allows you to receive the results in other ways, such as incorporating them into other GitHub workflows or displaying them as a PR comment.
-
-<!-- ![Job Summary Example](path/to/your/job-summary-image.png) -->
 
 ## Usage
 
