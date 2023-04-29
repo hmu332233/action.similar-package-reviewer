@@ -33,16 +33,13 @@ async function run(): Promise<void> {
     );
   core.endGroup();
 
-  core.startGroup('Format Messages');
+  core.startGroup('Set Results');
   const formattedResults = textFormatHelper.formatPackageSimilarity(
     packageSimilarityResults,
   );
-  core.debug(`message: ${formattedResults}`);
-  core.endGroup();
-
-  core.startGroup('Set Results');
   outputHelper.setResults(formattedResults);
   await summaryHelper.writeSummary(formattedResults);
+  core.debug(`message: ${formattedResults}`);
   core.endGroup();
 
   return;
