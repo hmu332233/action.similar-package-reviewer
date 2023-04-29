@@ -1,5 +1,9 @@
 name: 'Compare Dependencies'
-description: 'A GitHub Action for Node.js projects that automatically detects similar dependencies in pull requests, streamlining dependency management and preventing redundancy.'
+description: 'Provides a summary of similar packages detected by analyzing pull requests for new dependencies, powered by ChatGPT'
+author: 'hmu332233'
+branding:
+  icon: 'check-square'
+  color: 'gray-dark'
 inputs:
   openai_key:
     description: 'openai api key'
@@ -9,7 +13,7 @@ inputs:
     default: origin/${{ github.base_ref }}
   target_branch:
     description: 'The branch associated with the pull request, which contains the changes to be compared against the origin branch. Can be customized if needed.'
-    default: origin/${{ github.head_ref  }}
+    default: origin/${{ github.head_ref }}
 
 outputs:
   results:

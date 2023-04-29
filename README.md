@@ -4,13 +4,15 @@ A GitHub Action that provides a summary of similar packages detected by analyzin
 
 ![summary](https://user-images.githubusercontent.com/10302969/235314378-35cf7ba3-89b4-4279-8b0c-959ac46ecfc4.png)
 
-## How it works
+## Key Features
 
-1. When a PR is created, the action checks for any newly installed packages.
-2. If there are newly installed packages, they are compared to the previously installed packages.
-3. A summary is generated to identify any similar packages detected during the comparison.
-4. The summary is presented as a GitHub Action job summary.
-5. The action output allows you to receive the results in other ways, such as incorporating them into other GitHub workflows or displaying them as a PR comment.
+- 🧩 Automatically checks for newly installed packages in pull requests
+- 🔍 Compares new packages to previously installed packages
+- 📊 Generates a summary of similar packages detected during the comparison
+- 🚀 Integrates seamlessly into GitHub Actions workflows and presents the summary as a job output
+- ✨ Easily incorporate the results into other GitHub workflows or display them as a PR comment
+
+To get started, simply add a new YAML workflow to your .github/workflows folder, and follow the Usage section in README.
 
 ## Usage
 
@@ -57,7 +59,7 @@ jobs:
           fetch-depth: 0
       - name: Compare packages
         id: compare-packages
-        uses: hmu332233/action.compare-dependencies@v0.1.1
+        uses: hmu332233/action.compare-dependencies@v1.0.0
         with:
           openai_key: ${{ secrets.OPENAI_API_KEY }}
       - name: Create comment
@@ -74,11 +76,11 @@ Before using action.compare-dependencies, you need to have an OpenAI API key. If
 
 ## Inputs
 
-| Name            | Description                                                                                                                                    | Default     | Required |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | -------- |
-| `openai_key`    | openai api key                                                                                                                                 |             | Yes      |
-| `origin_branch` | The branch to be used as the base for comparison, typically the main branch of the project. Can be customized if needed.                       | origin/main | No       |
-| `target_branch` | The branch associated with the pull request, which contains the changes to be compared against the origin branch. Can be customized if needed. | [PR BRANCH] | No       |
+| Name            | Description                                                                                                                                    | Default                       | Required |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | -------- |
+| `openai_key`    | openai api key                                                                                                                                 |                               | Yes      |
+| `origin_branch` | The branch to be used as the base for comparison, typically the main branch of the project. Can be customized if needed.                       | origin/${{ github.base_ref }} | No       |
+| `target_branch` | The branch associated with the pull request, which contains the changes to be compared against the origin branch. Can be customized if needed. | origin/${{ github.head_ref }} | No       |
 
 ## Outputs
 
