@@ -2,12 +2,13 @@
 
 This action examines your pull requests for newly added dependencies and compares them with previously installed packages. If any similar packages are detected, a summary is generated and presented as a GitHub Action job summary, helping you streamline dependency management and prevent redundancy.
 
-## Features
+## How it works
 
-- When a PR is created, the action checks for any newly installed packages.
-- If there are newly installed packages, they are compared to the previously installed packages.
-- A summary is generated to identify any similar packages detected during the comparison, which is presented as a GitHub Action job summary.
-- The action output allows you to receive the results in other ways, such as incorporating them into other GitHub workflows or displaying them as a PR comment.
+1. When a PR is created, the action checks for any newly installed packages.
+2. If there are newly installed packages, they are compared to the previously installed packages.
+3. A summary is generated to identify any similar packages detected during the comparison.
+4. The summary is presented as a GitHub Action job summary.
+5. The action output allows you to receive the results in other ways, such as incorporating them into other GitHub workflows or displaying them as a PR comment.
 
 <!-- ![Job Summary Example](path/to/your/job-summary-image.png) -->
 
