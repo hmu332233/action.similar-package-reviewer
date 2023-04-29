@@ -6,8 +6,10 @@ inputs:
     required: true
   origin_branch:
     description: 'The branch to be used as the base for comparison, typically the main branch of the project. Can be customized if needed.'
+    default: origin/${{ github.base_ref }}
   target_branch:
     description: 'The branch associated with the pull request, which contains the changes to be compared against the origin branch. Can be customized if needed.'
+    default: origin/${{ github.head_ref  }}
 
 outputs:
   results:

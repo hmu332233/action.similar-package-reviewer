@@ -1,5 +1,4 @@
 import * as core from '@actions/core';
-import * as github from '@actions/github';
 
 /**
  * Get input values from the GitHub Actions.
@@ -9,10 +8,8 @@ import * as github from '@actions/github';
 export function getInputs() {
   const inputs: Inputs = {
     openaiKey: core.getInput('openai_key') || process.env.OPENAI_API_KEY!,
-    originBranch: core.getInput('origin_branch') || 'origin/main',
-    targetBranch:
-      core.getInput('target_branch') ||
-      `origin/${github.context.payload.pull_request?.head.ref}`,
+    originBranch: core.getInput('origin_branch', { required: true }),
+    targetBranch: core.getInput('target_branch', { required: true }),
   };
   return inputs;
 }
