@@ -12,10 +12,6 @@ This action examines your pull requests for newly added dependencies and compare
 
 <!-- ![Job Summary Example](path/to/your/job-summary-image.png) -->
 
-## Prerequisites
-
-Before using action.compare-dependencies, you need to have an OpenAI API key. If you don't have an API key yet, you can get one by signing up on the [OpenAI website](https://platform.openai.com/account/api-keys).
-
 ## Usage
 
 Add a new YAML workflow to your .github/workflows folder:
@@ -71,6 +67,10 @@ jobs:
           body: |
             ${{ steps.compare-packages.outputs.results }}
 ```
+
+## Prerequisites
+
+Before using action.compare-dependencies, you need to have an OpenAI API key. If you don't have an API key yet, you can get one by signing up on the [OpenAI website](https://platform.openai.com/account/api-keys).
 
 ## Inputs
 
