@@ -1,6 +1,6 @@
 {
-  "name": "action.compare-dependencies",
-  "version": "1.0.0",
+  "name": "action.similar-package-reviewer",
+  "version": "1.0.1",
   "description": "A GitHub Action for Node.js projects that automatically detects similar dependencies in pull requests, streamlining dependency management and preventing redundancy.",
   "main": "lib/main.js",
   "scripts": {

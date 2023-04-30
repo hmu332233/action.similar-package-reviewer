@@ -1,4 +1,4 @@
-# action.compare-dependencies
+# action.similar-package-reviewer
 
 A GitHub Action that provides a summary of similar packages detected by analyzing pull requests for new dependencies, effectively streamlining dependency management and preventing redundancy in Node.js projects, powered by ChatGPT
 
@@ -35,7 +35,7 @@ jobs:
           fetch-depth: 0
       - name: Compare packages
         id: compare-packages
-        uses: hmu332233/action.compare-dependencies@v0.1.1
+        uses: hmu332233/action.similar-package-reviewer@v1.0.1
         with:
           openai_key: ${{ secrets.OPENAI_API_KEY }}
 ```
@@ -59,7 +59,7 @@ jobs:
           fetch-depth: 0
       - name: Compare packages
         id: compare-packages
-        uses: hmu332233/action.compare-dependencies@v1.0.0
+        uses: hmu332233/action.similar-package-reviewer@v1.0.1
         with:
           openai_key: ${{ secrets.OPENAI_API_KEY }}
       - name: Create comment
@@ -72,7 +72,7 @@ jobs:
 
 ## Prerequisites
 
-Before using action.compare-dependencies, you need to have an OpenAI API key. If you don't have an API key yet, you can get one by signing up on the [OpenAI website](https://platform.openai.com/account/api-keys).
+Before using action.similar-package-reviewer, you need to have an OpenAI API key. If you don't have an API key yet, you can get one by signing up on the [OpenAI website](https://platform.openai.com/account/api-keys).
 
 ## Inputs
 
@@ -90,10 +90,10 @@ Before using action.compare-dependencies, you need to have an OpenAI API key. If
 
 ## Contributing
 
-Welcome contributions to action.compare-dependencies!
+Welcome contributions to action.similar-package-reviewer!
 
 <!-- Please see our CONTRIBUTING.md file for more information on how to contribute. -->
 
 ## License
 
-action.compare-dependencies is released under the MIT. See [LICENSE](./LICENSE) for more details.
+action.similar-package-reviewer is released under the MIT. See [LICENSE](./LICENSE) for more details.
