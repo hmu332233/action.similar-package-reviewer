@@ -1,4 +1,4 @@
-name: 'Compare Dependencies'
+name: 'Similar Package Reviewer'
 description: 'Provides a summary of similar packages detected by analyzing pull requests for new dependencies, powered by ChatGPT'
 author: 'hmu332233'
 branding:
