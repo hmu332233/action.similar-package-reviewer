@@ -81,7 +81,7 @@ export async function comparePackagesUsingOpenAI(
 
   const messageContent =
     completion.data.choices[0].message?.function_call?.arguments ||
-    '{items:[]}';
+    '{"items":[]}';
   const { items: comparedPkgs } = safelyParseJSON<{
     items: PackageSimilarityResult[];
   }>(messageContent, { items: [] });
