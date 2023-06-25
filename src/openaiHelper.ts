@@ -8,6 +8,37 @@ If replaceable packages are found, please present the information in the followi
 [ { "pkgName1": "[package from A list]", "pkgName2": "[package from B list]", "description": "[brief explanation of the similarity]" }]
 If no replaceable packages are found, output []. Please ensure only the JSON format is provided in the response.`;
 
+const PARSE_FUNCTION = {
+  name: 'parse_transaction',
+  parameters: {
+    type: 'object',
+    properties: {
+      items: {
+        type: 'array',
+        description:
+          'An array of objects representing replaceable packages and explanation. If no replaceable packages are found, input empty array',
+        items: {
+          type: 'object',
+          properties: {
+            pkgName1: {
+              type: 'string',
+              description: 'package from A list',
+            },
+            pkgName2: {
+              type: 'string',
+              description: 'package from A list',
+            },
+            description: {
+              type: 'string',
+              description: 'brief explanation of the similarity',
+            },
+          },
+        },
+      },
+    },
+  },
+};
+
 /**
  * Creates a prompt for OpenAI API to compare packages from two lists and identify any with similar purposes.
  * @param {string[]} pkgNames1 - The first list of package names.
@@ -39,18 +70,21 @@ export async function comparePackagesUsingOpenAI(
   core.debug(`prompt: ${content}`);
 
   const completion = await openai.createChatCompletion({
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-3.5-turbo-0613',
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content },
     ],
+    functions: [PARSE_FUNCTION],
+    function_call: { name: PARSE_FUNCTION.name },
   });
 
-  const messageContent = completion.data.choices[0].message?.content || '[]';
-  const comparedPkgs = safelyParseJSON<PackageSimilarityResult[]>(
-    messageContent,
-    [],
-  );
+  const messageContent =
+    completion.data.choices[0].message?.function_call?.arguments ||
+    '{items:[]}';
+  const { items: comparedPkgs } = safelyParseJSON<{
+    items: PackageSimilarityResult[];
+  }>(messageContent, { items: [] });
   core.debug(`comparedPkgs: ${JSON.stringify(comparedPkgs)}`);
 
   return comparedPkgs;
