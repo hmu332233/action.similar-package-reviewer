@@ -56,7 +56,45 @@ function createPrompt(pkgNames1: string[], pkgNames2: string[]) {
  * @param {string[]} addedPackages - The second list of package names.
  * @returns {Promise<PackageSimilarityResult[]>} A promise that resolves to an array of package similarity results.
  */
-export async function comparePackagesUsingOpenAI(
+export async function comparePackagesUsingMessage(
+  openaiKey: string,
+  originPackages: string[],
+  addedPackages: string[],
+): Promise<PackageSimilarityResult[]> {
+  const configuration = new Configuration({
+    apiKey: openaiKey,
+  });
+  const openai = new OpenAIApi(configuration);
+
+  const content = createPrompt(originPackages, addedPackages);
+  core.debug(`prompt: ${content}`);
+
+  const completion = await openai.createChatCompletion({
+    model: 'gpt-3.5-turbo-0613',
+    messages: [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content },
+    ],
+  });
+
+  const messageContent = completion.data.choices[0].message?.content || '[]';
+  const comparedPkgs = safelyParseJSON<PackageSimilarityResult[]>(
+    messageContent,
+    [],
+  );
+  core.debug(`comparedPkgs: ${JSON.stringify(comparedPkgs)}`);
+
+  return comparedPkgs;
+}
+
+/**
+ * Compares packages from two lists using OpenAI API, and returns the similarities between them.
+ * @param {string} openaiKey - openai key.
+ * @param {string[]} originPackages - The first list of package names.
+ * @param {string[]} addedPackages - The second list of package names.
+ * @returns {Promise<PackageSimilarityResult[]>} A promise that resolves to an array of package similarity results.
+ */
+export async function comparePackagesUsingFunctionCall(
   openaiKey: string,
   originPackages: string[],
   addedPackages: string[],
