@@ -10,7 +10,8 @@ import * as textFormatHelper from './textFormatHelper';
 import * as summaryHelper from './summaryHelper';
 
 async function run(): Promise<void> {
-  const { openaiKey, originBranch, targetBranch } = inputHelper.getInputs();
+  const { openaiKey, originBranch, targetBranch, useFunctionCall } =
+    inputHelper.getInputs();
 
   core.startGroup('Get Package List');
   const { originPackages, addedPackages } =
@@ -25,12 +26,14 @@ async function run(): Promise<void> {
   }
 
   core.startGroup('Compare Packages Using OpenAI');
-  const packageSimilarityResults =
-    await openaiHelper.comparePackagesUsingOpenAI(
-      openaiKey,
-      originPackages,
-      addedPackages,
-    );
+  const comparePackages = useFunctionCall
+    ? openaiHelper.comparePackagesUsingFunctionCall
+    : openaiHelper.comparePackagesUsingMessage;
+  const packageSimilarityResults = await comparePackages(
+    openaiKey,
+    originPackages,
+    addedPackages,
+  );
   core.endGroup();
 
   core.startGroup('Set Results');
