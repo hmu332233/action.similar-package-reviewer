@@ -42,6 +42,7 @@ function getInputs() {
         openaiKey: core.getInput('openai_key') || process.env.OPENAI_API_KEY,
         originBranch: core.getInput('origin_branch', { required: true }),
         targetBranch: core.getInput('target_branch', { required: true }),
+        useFunctionCall: core.getInput('use_functioncall') === 'true',
     };
     return inputs;
 }
@@ -99,7 +100,7 @@ const textFormatHelper = __importStar(__nccwpck_require__(275));
 const summaryHelper = __importStar(__nccwpck_require__(9526));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        const { openaiKey, originBranch, targetBranch } = inputHelper.getInputs();
+        const { openaiKey, originBranch, targetBranch, useFunctionCall } = inputHelper.getInputs();
         core.startGroup('Get Package List');
         const { originPackages, addedPackages } = packageDiffHelper.getPackageChangesBetweenBranches(originBranch, targetBranch);
         core.endGroup();
@@ -107,7 +108,10 @@ function run() {
             return outputHelper.setNotFound();
         }
         core.startGroup('Compare Packages Using OpenAI');
-        const packageSimilarityResults = yield openaiHelper.comparePackagesUsingOpenAI(openaiKey, originPackages, addedPackages);
+        const comparePackages = useFunctionCall
+            ? openaiHelper.comparePackagesUsingFunctionCall
+            : openaiHelper.comparePackagesUsingMessage;
+        const packageSimilarityResults = yield comparePackages(openaiKey, originPackages, addedPackages);
         core.endGroup();
         core.startGroup('Set Results');
         const formattedResults = textFormatHelper.formatPackageSimilarity(packageSimilarityResults);
@@ -161,13 +165,44 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.comparePackagesUsingOpenAI = void 0;
+exports.comparePackagesUsingFunctionCall = exports.comparePackagesUsingMessage = void 0;
 const core = __importStar(__nccwpck_require__(7733));
-const openai_1 = __nccwpck_require__(586);
-const SYSTEM_PROMPT = `Please compare the packages in lists A and B, and identify any with same purposes.
-If a similar package is found, please present the information in the following JSON format:
+const openai_1 = __nccwpck_require__(4096);
+const SYSTEM_PROMPT = `Both list A and B are node module packages.
+Please compare the packages in lists A and B, and find the replaceable packages.
+The replaceable package means similar and alternative package.
+If replaceable packages are found, please present the information in the following JSON format:
 [ { "pkgName1": "[package from A list]", "pkgName2": "[package from B list]", "description": "[brief explanation of the similarity]" }]
-If no similar packages are found, output []. Please ensure only the JSON format is provided in the response.`;
+If no replaceable packages are found, output []. Please ensure only the JSON format is provided in the response.`;
+const PARSE_FUNCTION = {
+    name: 'parse_transaction',
+    parameters: {
+        type: 'object',
+        properties: {
+            items: {
+                type: 'array',
+                description: 'An array of objects representing replaceable packages and explanation. If no replaceable packages are found, input empty array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        pkgName1: {
+                            type: 'string',
+                            description: 'package from A list',
+                        },
+                        pkgName2: {
+                            type: 'string',
+                            description: 'package from A list',
+                        },
+                        description: {
+                            type: 'string',
+                            description: 'brief explanation of the similarity',
+                        },
+                    },
+                },
+            },
+        },
+    },
+};
 /**
  * Creates a prompt for OpenAI API to compare packages from two lists and identify any with similar purposes.
  * @param {string[]} pkgNames1 - The first list of package names.
@@ -184,7 +219,7 @@ function createPrompt(pkgNames1, pkgNames2) {
  * @param {string[]} addedPackages - The second list of package names.
  * @returns {Promise<PackageSimilarityResult[]>} A promise that resolves to an array of package similarity results.
  */
-function comparePackagesUsingOpenAI(openaiKey, originPackages, addedPackages) {
+function comparePackagesUsingMessage(openaiKey, originPackages, addedPackages) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const configuration = new openai_1.Configuration({
@@ -194,7 +229,7 @@ function comparePackagesUsingOpenAI(openaiKey, originPackages, addedPackages) {
         const content = createPrompt(originPackages, addedPackages);
         core.debug(`prompt: ${content}`);
         const completion = yield openai.createChatCompletion({
-            model: 'gpt-3.5-turbo',
+            model: 'gpt-3.5-turbo-0613',
             messages: [
                 { role: 'system', content: SYSTEM_PROMPT },
                 { role: 'user', content },
@@ -206,7 +241,40 @@ function comparePackagesUsingOpenAI(openaiKey, originPackages, addedPackages) {
         return comparedPkgs;
     });
 }
-exports.comparePackagesUsingOpenAI = comparePackagesUsingOpenAI;
+exports.comparePackagesUsingMessage = comparePackagesUsingMessage;
+/**
+ * Compares packages from two lists using OpenAI API, and returns the similarities between them.
+ * @param {string} openaiKey - openai key.
+ * @param {string[]} originPackages - The first list of package names.
+ * @param {string[]} addedPackages - The second list of package names.
+ * @returns {Promise<PackageSimilarityResult[]>} A promise that resolves to an array of package similarity results.
+ */
+function comparePackagesUsingFunctionCall(openaiKey, originPackages, addedPackages) {
+    var _a, _b;
+    return __awaiter(this, void 0, void 0, function* () {
+        const configuration = new openai_1.Configuration({
+            apiKey: openaiKey,
+        });
+        const openai = new openai_1.OpenAIApi(configuration);
+        const content = createPrompt(originPackages, addedPackages);
+        core.debug(`prompt: ${content}`);
+        const completion = yield openai.createChatCompletion({
+            model: 'gpt-3.5-turbo-0613',
+            messages: [
+                { role: 'system', content: SYSTEM_PROMPT },
+                { role: 'user', content },
+            ],
+            functions: [PARSE_FUNCTION],
+            function_call: { name: PARSE_FUNCTION.name },
+        });
+        const messageContent = ((_b = (_a = completion.data.choices[0].message) === null || _a === void 0 ? void 0 : _a.function_call) === null || _b === void 0 ? void 0 : _b.arguments) ||
+            '{"items":[]}';
+        const { items: comparedPkgs } = safelyParseJSON(messageContent, { items: [] });
+        core.debug(`comparedPkgs: ${JSON.stringify(comparedPkgs)}`);
+        return comparedPkgs;
+    });
+}
+exports.comparePackagesUsingFunctionCall = comparePackagesUsingFunctionCall;
 function safelyParseJSON(json, defaultValue) {
     try {
         return JSON.parse(json);
@@ -11323,7 +11391,7 @@ function onceStrict (fn) {
 
 /***/ }),
 
-/***/ 4246:
+/***/ 4494:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -11334,7 +11402,7 @@ function onceStrict (fn) {
  * OpenAI API
  * APIs for sampling from and fine-tuning language models
  *
- * The version of the OpenAPI document: 1.2.0
+ * The version of the OpenAPI document: 1.3.0
  *
  *
  * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
@@ -11355,18 +11423,20 @@ exports.OpenAIApi = exports.OpenAIApiFactory = exports.OpenAIApiFp = exports.Ope
 const axios_1 = __nccwpck_require__(2748);
 // Some imports not used depending on template conditions
 // @ts-ignore
-const common_1 = __nccwpck_require__(7795);
+const common_1 = __nccwpck_require__(9311);
 // @ts-ignore
-const base_1 = __nccwpck_require__(21);
+const base_1 = __nccwpck_require__(6654);
 exports.ChatCompletionRequestMessageRoleEnum = {
     System: 'system',
     User: 'user',
-    Assistant: 'assistant'
+    Assistant: 'assistant',
+    Function: 'function'
 };
 exports.ChatCompletionResponseMessageRoleEnum = {
     System: 'system',
     User: 'user',
-    Assistant: 'assistant'
+    Assistant: 'assistant',
+    Function: 'function'
 };
 exports.CreateImageRequestSizeEnum = {
     _256x256: '256x256',
@@ -11445,7 +11515,7 @@ exports.OpenAIApiAxiosParamCreator = function (configuration) {
         }),
         /**
          *
-         * @summary Creates a completion for the chat message
+         * @summary Creates a model response for the given chat conversation.
          * @param {CreateChatCompletionRequest} createChatCompletionRequest
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -11506,7 +11576,7 @@ exports.OpenAIApiAxiosParamCreator = function (configuration) {
         }),
         /**
          *
-         * @summary Creates a completion for the provided prompt and parameters
+         * @summary Creates a completion for the provided prompt and parameters.
          * @param {CreateCompletionRequest} createCompletionRequest
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -11872,7 +11942,7 @@ exports.OpenAIApiAxiosParamCreator = function (configuration) {
         /**
          *
          * @summary Transcribes audio into the input language.
-         * @param {File} file The audio file to transcribe, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
+         * @param {File} file The audio file object (not file name) to transcribe, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
          * @param {string} model ID of the model to use. Only &#x60;whisper-1&#x60; is currently available.
          * @param {string} [prompt] An optional text to guide the model\\\&#39;s style or continue a previous audio segment. The [prompt](/docs/guides/speech-to-text/prompting) should match the audio language.
          * @param {string} [responseFormat] The format of the transcript output, in one of these options: json, text, srt, verbose_json, or vtt.
@@ -11928,7 +11998,7 @@ exports.OpenAIApiAxiosParamCreator = function (configuration) {
         /**
          *
          * @summary Translates audio into into English.
-         * @param {File} file The audio file to translate, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
+         * @param {File} file The audio file object (not file name) translate, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
          * @param {string} model ID of the model to use. Only &#x60;whisper-1&#x60; is currently available.
          * @param {string} [prompt] An optional text to guide the model\\\&#39;s style or continue a previous audio segment. The [prompt](/docs/guides/speech-to-text/prompting) should be in English.
          * @param {string} [responseFormat] The format of the transcript output, in one of these options: json, text, srt, verbose_json, or vtt.
@@ -12353,7 +12423,7 @@ exports.OpenAIApiFp = function (configuration) {
         },
         /**
          *
-         * @summary Creates a completion for the chat message
+         * @summary Creates a model response for the given chat conversation.
          * @param {CreateChatCompletionRequest} createChatCompletionRequest
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -12380,7 +12450,7 @@ exports.OpenAIApiFp = function (configuration) {
         },
         /**
          *
-         * @summary Creates a completion for the provided prompt and parameters
+         * @summary Creates a completion for the provided prompt and parameters.
          * @param {CreateCompletionRequest} createCompletionRequest
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -12524,7 +12594,7 @@ exports.OpenAIApiFp = function (configuration) {
         /**
          *
          * @summary Transcribes audio into the input language.
-         * @param {File} file The audio file to transcribe, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
+         * @param {File} file The audio file object (not file name) to transcribe, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
          * @param {string} model ID of the model to use. Only &#x60;whisper-1&#x60; is currently available.
          * @param {string} [prompt] An optional text to guide the model\\\&#39;s style or continue a previous audio segment. The [prompt](/docs/guides/speech-to-text/prompting) should match the audio language.
          * @param {string} [responseFormat] The format of the transcript output, in one of these options: json, text, srt, verbose_json, or vtt.
@@ -12542,7 +12612,7 @@ exports.OpenAIApiFp = function (configuration) {
         /**
          *
          * @summary Translates audio into into English.
-         * @param {File} file The audio file to translate, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
+         * @param {File} file The audio file object (not file name) translate, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
          * @param {string} model ID of the model to use. Only &#x60;whisper-1&#x60; is currently available.
          * @param {string} [prompt] An optional text to guide the model\\\&#39;s style or continue a previous audio segment. The [prompt](/docs/guides/speech-to-text/prompting) should be in English.
          * @param {string} [responseFormat] The format of the transcript output, in one of these options: json, text, srt, verbose_json, or vtt.
@@ -12743,7 +12813,7 @@ exports.OpenAIApiFactory = function (configuration, basePath, axios) {
         },
         /**
          *
-         * @summary Creates a completion for the chat message
+         * @summary Creates a model response for the given chat conversation.
          * @param {CreateChatCompletionRequest} createChatCompletionRequest
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -12764,7 +12834,7 @@ exports.OpenAIApiFactory = function (configuration, basePath, axios) {
         },
         /**
          *
-         * @summary Creates a completion for the provided prompt and parameters
+         * @summary Creates a completion for the provided prompt and parameters.
          * @param {CreateCompletionRequest} createCompletionRequest
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -12878,7 +12948,7 @@ exports.OpenAIApiFactory = function (configuration, basePath, axios) {
         /**
          *
          * @summary Transcribes audio into the input language.
-         * @param {File} file The audio file to transcribe, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
+         * @param {File} file The audio file object (not file name) to transcribe, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
          * @param {string} model ID of the model to use. Only &#x60;whisper-1&#x60; is currently available.
          * @param {string} [prompt] An optional text to guide the model\\\&#39;s style or continue a previous audio segment. The [prompt](/docs/guides/speech-to-text/prompting) should match the audio language.
          * @param {string} [responseFormat] The format of the transcript output, in one of these options: json, text, srt, verbose_json, or vtt.
@@ -12893,7 +12963,7 @@ exports.OpenAIApiFactory = function (configuration, basePath, axios) {
         /**
          *
          * @summary Translates audio into into English.
-         * @param {File} file The audio file to translate, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
+         * @param {File} file The audio file object (not file name) translate, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
          * @param {string} model ID of the model to use. Only &#x60;whisper-1&#x60; is currently available.
          * @param {string} [prompt] An optional text to guide the model\\\&#39;s style or continue a previous audio segment. The [prompt](/docs/guides/speech-to-text/prompting) should be in English.
          * @param {string} [responseFormat] The format of the transcript output, in one of these options: json, text, srt, verbose_json, or vtt.
@@ -13057,7 +13127,7 @@ class OpenAIApi extends base_1.BaseAPI {
     }
     /**
      *
-     * @summary Creates a completion for the chat message
+     * @summary Creates a model response for the given chat conversation.
      * @param {CreateChatCompletionRequest} createChatCompletionRequest
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -13080,7 +13150,7 @@ class OpenAIApi extends base_1.BaseAPI {
     }
     /**
      *
-     * @summary Creates a completion for the provided prompt and parameters
+     * @summary Creates a completion for the provided prompt and parameters.
      * @param {CreateCompletionRequest} createCompletionRequest
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -13204,7 +13274,7 @@ class OpenAIApi extends base_1.BaseAPI {
     /**
      *
      * @summary Transcribes audio into the input language.
-     * @param {File} file The audio file to transcribe, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
+     * @param {File} file The audio file object (not file name) to transcribe, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
      * @param {string} model ID of the model to use. Only &#x60;whisper-1&#x60; is currently available.
      * @param {string} [prompt] An optional text to guide the model\\\&#39;s style or continue a previous audio segment. The [prompt](/docs/guides/speech-to-text/prompting) should match the audio language.
      * @param {string} [responseFormat] The format of the transcript output, in one of these options: json, text, srt, verbose_json, or vtt.
@@ -13220,7 +13290,7 @@ class OpenAIApi extends base_1.BaseAPI {
     /**
      *
      * @summary Translates audio into into English.
-     * @param {File} file The audio file to translate, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
+     * @param {File} file The audio file object (not file name) translate, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
      * @param {string} model ID of the model to use. Only &#x60;whisper-1&#x60; is currently available.
      * @param {string} [prompt] An optional text to guide the model\\\&#39;s style or continue a previous audio segment. The [prompt](/docs/guides/speech-to-text/prompting) should be in English.
      * @param {string} [responseFormat] The format of the transcript output, in one of these options: json, text, srt, verbose_json, or vtt.
@@ -13369,7 +13439,7 @@ exports.OpenAIApi = OpenAIApi;
 
 /***/ }),
 
-/***/ 21:
+/***/ 6654:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -13380,7 +13450,7 @@ exports.OpenAIApi = OpenAIApi;
  * OpenAI API
  * APIs for sampling from and fine-tuning language models
  *
- * The version of the OpenAPI document: 1.2.0
+ * The version of the OpenAPI document: 1.3.0
  *
  *
  * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
@@ -13436,7 +13506,7 @@ exports.RequiredError = RequiredError;
 
 /***/ }),
 
-/***/ 7795:
+/***/ 9311:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -13447,7 +13517,7 @@ exports.RequiredError = RequiredError;
  * OpenAI API
  * APIs for sampling from and fine-tuning language models
  *
- * The version of the OpenAPI document: 1.2.0
+ * The version of the OpenAPI document: 1.3.0
  *
  *
  * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
@@ -13465,7 +13535,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createRequestFunction = exports.toPathString = exports.serializeDataIfNeeded = exports.setSearchParams = exports.setOAuthToObject = exports.setBearerAuthToObject = exports.setBasicAuthToObject = exports.setApiKeyToObject = exports.assertParamExists = exports.DUMMY_BASE_URL = void 0;
-const base_1 = __nccwpck_require__(21);
+const base_1 = __nccwpck_require__(6654);
 /**
  *
  * @export
@@ -13595,7 +13665,7 @@ exports.createRequestFunction = function (axiosArgs, globalAxios, BASE_PATH, con
 
 /***/ }),
 
-/***/ 702:
+/***/ 6077:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -13606,7 +13676,7 @@ exports.createRequestFunction = function (axiosArgs, globalAxios, BASE_PATH, con
  * OpenAI API
  * APIs for sampling from and fine-tuning language models
  *
- * The version of the OpenAPI document: 1.2.0
+ * The version of the OpenAPI document: 1.3.0
  *
  *
  * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
@@ -13615,7 +13685,7 @@ exports.createRequestFunction = function (axiosArgs, globalAxios, BASE_PATH, con
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Configuration = void 0;
-const packageJson = __nccwpck_require__(7626);
+const packageJson = __nccwpck_require__(7003);
 class Configuration {
     constructor(param = {}) {
         this.apiKey = param.apiKey;
@@ -13657,7 +13727,7 @@ exports.Configuration = Configuration;
 
 /***/ }),
 
-/***/ 586:
+/***/ 4096:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -13668,7 +13738,7 @@ exports.Configuration = Configuration;
  * OpenAI API
  * APIs for sampling from and fine-tuning language models
  *
- * The version of the OpenAPI document: 1.2.0
+ * The version of the OpenAPI document: 1.3.0
  *
  *
  * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
@@ -13686,8 +13756,8 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-__exportStar(__nccwpck_require__(4246), exports);
-__exportStar(__nccwpck_require__(702), exports);
+__exportStar(__nccwpck_require__(4494), exports);
+__exportStar(__nccwpck_require__(6077), exports);
 
 
 /***/ }),
@@ -18721,11 +18791,11 @@ module.exports = JSON.parse('{"application/1d-interleaved-parityfec":{"source":"
 
 /***/ }),
 
-/***/ 7626:
+/***/ 7003:
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"openai","version":"3.2.1","description":"Node.js library for the OpenAI API","repository":{"type":"git","url":"git@github.com:openai/openai-node.git"},"keywords":["openai","open","ai","gpt-3","gpt3"],"author":"OpenAI","license":"MIT","main":"./dist/index.js","types":"./dist/index.d.ts","scripts":{"build":"tsc --outDir dist/"},"dependencies":{"axios":"^0.26.0","form-data":"^4.0.0"},"devDependencies":{"@types/node":"^12.11.5","typescript":"^3.6.4"}}');
+module.exports = JSON.parse('{"name":"openai","version":"3.3.0","description":"Node.js library for the OpenAI API","repository":{"type":"git","url":"git@github.com:openai/openai-node.git"},"keywords":["openai","open","ai","gpt-3","gpt3"],"author":"OpenAI","license":"MIT","main":"./dist/index.js","types":"./dist/index.d.ts","scripts":{"build":"tsc --outDir dist/"},"dependencies":{"axios":"^0.26.0","form-data":"^4.0.0"},"devDependencies":{"@types/node":"^12.11.5","typescript":"^3.6.4"}}');
 
 /***/ })
 
