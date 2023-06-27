@@ -14,6 +14,9 @@ inputs:
   target_branch:
     description: 'The branch associated with the pull request, which contains the changes to be compared against the origin branch. Can be customized if needed.'
     default: origin/${{ github.head_ref }}
+  use_functioncall:
+    description: 'Indicates whether to use the functioncall feature of ChatGPT. Using functioncall can provide more stable execution but may produce slightly different comparison results.'
+    default: false
 
 outputs:
   results:

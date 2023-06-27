@@ -10,6 +10,7 @@ export function getInputs() {
     openaiKey: core.getInput('openai_key') || process.env.OPENAI_API_KEY!,
     originBranch: core.getInput('origin_branch', { required: true }),
     targetBranch: core.getInput('target_branch', { required: true }),
+    useFunctionCall: core.getInput('use_functioncall') === 'true',
   };
   return inputs;
 }

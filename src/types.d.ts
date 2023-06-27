@@ -14,4 +14,5 @@ type Inputs = {
   openaiKey: string;
   originBranch: string;
   targetBranch: string;
+  useFunctionCall: boolean;
 };
