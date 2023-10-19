@@ -60,6 +60,7 @@ export async function comparePackagesUsingMessage(
   openaiKey: string,
   originPackages: string[],
   addedPackages: string[],
+  model: string,
 ): Promise<PackageSimilarityResult[]> {
   const configuration = new Configuration({
     apiKey: openaiKey,
@@ -70,7 +71,7 @@ export async function comparePackagesUsingMessage(
   core.debug(`prompt: ${content}`);
 
   const completion = await openai.createChatCompletion({
-    model: 'gpt-3.5-turbo-0613',
+    model,
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content },
@@ -98,6 +99,7 @@ export async function comparePackagesUsingFunctionCall(
   openaiKey: string,
   originPackages: string[],
   addedPackages: string[],
+  model: string,
 ): Promise<PackageSimilarityResult[]> {
   const configuration = new Configuration({
     apiKey: openaiKey,
@@ -108,7 +110,7 @@ export async function comparePackagesUsingFunctionCall(
   core.debug(`prompt: ${content}`);
 
   const completion = await openai.createChatCompletion({
-    model: 'gpt-3.5-turbo-0613',
+    model,
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content },
