@@ -76,11 +76,14 @@ Before using action.similar-package-reviewer, you need to have an OpenAI API key
 
 ## Inputs
 
+## Inputs
+
 | Name               | Description                                                                                                                                                               | Default                       | Required |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | -------- |
 | `openai_key`       | openai api key                                                                                                                                                            |                               | Yes      |
 | `origin_branch`    | The branch to be used as the base for comparison, typically the main branch of the project. Can be customized if needed.                                                  | origin/${{ github.base_ref }} | No       |
 | `target_branch`    | The branch associated with the pull request, which contains the changes to be compared against the origin branch. Can be customized if needed.                            | origin/${{ github.head_ref }} | No       |
+| `model`            | Specifies the ChatGPT model to be used for analyzing pull requests. Different models may provide varying levels of analysis accuracy and performance.                     | gpt-3.5-turbo                 | No       |
 | `use_functioncall` | Indicates whether to use the functioncall feature of ChatGPT. Using functioncall can provide more stable execution but may produce slightly different comparison results. | false                         | No       |
 
 ## Outputs
