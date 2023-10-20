@@ -15,4 +15,5 @@ type Inputs = {
   originBranch: string;
   targetBranch: string;
   useFunctionCall: boolean;
+  model: string;
 };

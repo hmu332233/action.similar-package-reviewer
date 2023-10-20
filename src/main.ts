@@ -10,7 +10,7 @@ import * as textFormatHelper from './textFormatHelper';
 import * as summaryHelper from './summaryHelper';
 
 async function run(): Promise<void> {
-  const { openaiKey, originBranch, targetBranch, useFunctionCall } =
+  const { openaiKey, originBranch, targetBranch, useFunctionCall, model } =
     inputHelper.getInputs();
 
   core.startGroup('Get Package List');
@@ -33,6 +33,7 @@ async function run(): Promise<void> {
     openaiKey,
     originPackages,
     addedPackages,
+    model,
   );
   core.endGroup();
 

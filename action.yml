@@ -17,6 +17,9 @@ inputs:
   use_functioncall:
     description: 'Indicates whether to use the functioncall feature of ChatGPT. Using functioncall can provide more stable execution but may produce slightly different comparison results.'
     default: false
+  model:
+    description: 'Specifies the ChatGPT model to be used for analyzing pull requests. Different models may provide varying levels of analysis accuracy and performance. Default is gpt-3.5-turbo.'
+    default: gpt-3.5-turbo
 
 outputs:
   results:
